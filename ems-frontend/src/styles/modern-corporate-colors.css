@@ -1,0 +1,133 @@
+/* Blue Gradient Theme - Additional Styles */
+
+/* Global gradient backgrounds */
+.blue-gradient-bg {
+  background: linear-gradient(135deg, #03045e 0%, #023e8a 25%, #0077b6 50%, #0096c7 75%, #00b4d8 100%);
+}
+
+.blue-gradient-bg-light {
+  background: linear-gradient(135deg, #48cae4 0%, #90e0ef 50%, #ade8f4 100%);
+}
+
+.blue-gradient-bg-very-light {
+  background: linear-gradient(135deg, #90e0ef 0%, #ade8f4 50%, #caf0f8 100%);
+}
+
+/* Text gradients */
+.blue-gradient-text {
+  background: linear-gradient(45deg, #03045e 0%, #0077b6 50%, #00b4d8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.blue-gradient-text-light {
+  background: linear-gradient(45deg, #0077b6 0%, #00b4d8 50%, #48cae4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Button gradients */
+.btn-blue-gradient {
+  background: linear-gradient(135deg, #03045e 0%, #0077b6 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-blue-gradient:hover {
+  background: linear-gradient(135deg, #0077b6 0%, #03045e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(3, 4, 94, 0.3);
+}
+
+.btn-blue-gradient-light {
+  background: linear-gradient(135deg, #00b4d8 0%, #48cae4 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-blue-gradient-light:hover {
+  background: linear-gradient(135deg, #48cae4 0%, #00b4d8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 180, 216, 0.3);
+}
+
+/* Card gradients */
+.card-blue-gradient {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(202, 240, 248, 0.1) 100%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 180, 216, 0.2);
+  transition: all 0.3s ease;
+}
+
+.card-blue-gradient:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(3, 4, 94, 0.15);
+  border-color: rgba(0, 180, 216, 0.4);
+}
+
+/* Border gradients */
+.border-blue-gradient {
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #03045e, #0077b6, #00b4d8) 1;
+}
+
+/* Shadow utilities */
+.shadow-blue {
+  box-shadow: 0 4px 20px rgba(3, 4, 94, 0.1);
+}
+
+.shadow-blue-hover:hover {
+  box-shadow: 0 8px 30px rgba(3, 4, 94, 0.2);
+}
+
+/* Animation keyframes */
+@keyframes bluePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 180, 216, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 180, 216, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 180, 216, 0);
+  }
+}
+
+.blue-pulse {
+  animation: bluePulse 2s infinite;
+}
+
+/* Glass morphism effect */
+.glass-blue {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(3, 4, 94, 0.1);
+}
+
+/* Status colors with blue theme */
+.status-success {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+}
+
+.status-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: white;
+}
+
+.status-error {
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  color: white;
+}
+
+.status-info {
+  background: linear-gradient(135deg, #00b4d8 0%, #48cae4 100%);
+  color: white;
+} 
