@@ -108,7 +108,7 @@ const ActivityFeed: React.FC = () => {
       
       const normalizedActivities: Activity[] = activitiesResponse.data.map((activity: Activity) => ({
         ...activity,
-        timestamp: new Date(activity.timestamp as any),
+        timestamp: activity.timestamp instanceof Date ? activity.timestamp : new Date(activity.timestamp),
       }));
 
       setActivities(normalizedActivities);

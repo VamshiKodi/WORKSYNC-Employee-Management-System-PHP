@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -46,91 +46,16 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { SelectChangeEvent } from '@mui/material/Select';
 import ModernCorporateColors from '../styles/modern-corporate-colors';
+import { leavesAPI } from '../services/api';
+import { authAPI } from '../services/api';
 
-// Mock data for leave requests
-const leaveRequests = [
-  {
-    id: 1,
-    employee: {
-      name: 'John Doe',
-      avatar: 'JD',
-      department: 'Engineering',
-      position: 'Senior Software Engineer',
-    },
-    type: 'vacation',
-    startDate: new Date('2024-07-15'),
-    endDate: new Date('2024-07-20'),
-    days: 5,
-    reason: 'Family vacation to Hawaii',
-    status: 'pending',
-    submittedDate: new Date('2024-06-20'),
-    approvedBy: null,
-    approvedDate: null,
-  },
-  {
-    id: 2,
-    employee: {
-      name: 'Sarah Wilson',
-      avatar: 'SW',
-      department: 'HR',
-      position: 'HR Manager',
-    },
-    type: 'sick',
-    startDate: new Date('2024-07-10'),
-    endDate: new Date('2024-07-12'),
-    days: 3,
-    reason: 'Medical appointment and recovery',
-    status: 'approved',
-    submittedDate: new Date('2024-07-08'),
-    approvedBy: 'Mike Johnson',
-    approvedDate: new Date('2024-07-09'),
-  },
-  {
-    id: 3,
-    employee: {
-      name: 'Mike Johnson',
-      avatar: 'MJ',
-      department: 'Sales',
-      position: 'Sales Manager',
-    },
-    type: 'personal',
-    startDate: new Date('2024-07-25'),
-    endDate: new Date('2024-07-26'),
-    days: 2,
-    reason: 'Personal family matter',
-    status: 'rejected',
-    submittedDate: new Date('2024-07-15'),
-    approvedBy: 'Sarah Wilson',
-    approvedDate: new Date('2024-07-16'),
-    rejectionReason: 'High workload during this period',
-  },
-  {
-    id: 4,
-    employee: {
-      name: 'Emily Chen',
-      avatar: 'EC',
-      department: 'Engineering',
-      position: 'Project Manager',
-    },
-    type: 'vacation',
-    startDate: new Date('2024-08-05'),
-    endDate: new Date('2024-08-12'),
-    days: 8,
-    reason: 'Summer vacation with family',
-    status: 'pending',
-    submittedDate: new Date('2024-07-18'),
-    approvedBy: null,
-    approvedDate: null,
-  },
-];
-
+// Backend-supported leave types
 const leaveTypes = [
-  { value: 'vacation', label: 'Vacation', icon: <BeachAccess />, color: ModernCorporateColors.blueGradient1 },
+  { value: 'annual', label: 'Annual', icon: <BeachAccess />, color: ModernCorporateColors.blueGradient1 },
   { value: 'sick', label: 'Sick Leave', icon: <LocalHospital />, color: ModernCorporateColors.error },
-  { value: 'personal', label: 'Personal', icon: <Person />, color: ModernCorporateColors.warning },
-  { value: 'work', label: 'Work From Home', icon: <Home />, color: ModernCorporateColors.info },
-  { value: 'education', label: 'Education', icon: <School />, color: ModernCorporateColors.success },
-  { value: 'travel', label: 'Business Travel', icon: <Flight />, color: ModernCorporateColors.blueGradient3 },
+  { value: 'unpaid', label: 'Unpaid', icon: <Person />, color: ModernCorporateColors.warning },
+  { value: 'casual', label: 'Casual', icon: <Home />, color: ModernCorporateColors.info },
+  { value: 'other', label: 'Other', icon: <School />, color: ModernCorporateColors.success },
 ];
 
 const LeaveRequests: React.FC = () => {
@@ -139,7 +64,10 @@ const LeaveRequests: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
-  const [requests, setRequests] = useState(leaveRequests);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Form state for new request
@@ -155,12 +83,82 @@ const LeaveRequests: React.FC = () => {
     reason: '',
   });
 
+  // Load current user and requests
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const me = await authAPI.getCurrentUser();
+        setCurrentUser(me.user);
+        await refreshRequests(me.user);
+      } catch (e: any) {
+        setError(e.message || 'Failed to load leave requests');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshRequests = async (user?: any) => {
+    const role = (user || currentUser)?.role;
+    const params: any = {};
+    if (filterStatus !== 'all') params.status = filterStatus;
+    if (filterType !== 'all') params.type = filterType; // backend route currently filters by status; type filter can be added later
+    if (role === 'admin' || role === 'hr') {
+      const data = await leavesAPI.list({ status: params.status, page: 1, limit: 50 });
+      // normalize to UI shape
+      const items = (data.items || []).map((it: any) => ({
+        id: it._id,
+        employee: {
+          name: it.employeeId?.fullName || `${it.employeeId?.firstName || ''} ${it.employeeId?.lastName || ''}`.trim(),
+          avatar: (it.employeeId?.firstName || '?')[0] + (it.employeeId?.lastName || '?')[0],
+          department: it.employeeId?.department,
+          position: it.employeeId?.position,
+        },
+        type: it.type,
+        startDate: new Date(it.startDate),
+        endDate: new Date(it.endDate),
+        days: it.days,
+        reason: it.reason,
+        status: it.status,
+        submittedDate: new Date(it.createdAt),
+        approvedBy: it.approvedBy,
+        approvedDate: it.approvedAt ? new Date(it.approvedAt) : null,
+      }));
+      setRequests(items);
+    } else {
+      const data = await leavesAPI.getMy({ status: params.status, page: 1, limit: 50 });
+      const items = (data.items || []).map((it: any) => ({
+        id: it._id,
+        employee: {
+          name: 'Me',
+          avatar: 'ME',
+          department: '',
+          position: '',
+        },
+        type: it.type,
+        startDate: new Date(it.startDate),
+        endDate: new Date(it.endDate),
+        days: it.days,
+        reason: it.reason,
+        status: it.status,
+        submittedDate: new Date(it.createdAt),
+        approvedBy: it.approvedBy,
+        approvedDate: it.approvedAt ? new Date(it.approvedAt) : null,
+      }));
+      setRequests(items);
+    }
+  };
+
   const handleNewRequest = (): void => {
     setFormError(null);
     setShowNewRequestDialog(true);
   };
 
-  const handleSubmitRequest = (): void => {
+  const handleSubmitRequest = async (): Promise<void> => {
     setFormError(null);
     if (!newRequest.type || !newRequest.startDate || !newRequest.endDate || !newRequest.reason) {
       setFormError('Please fill in all fields.');
@@ -170,60 +168,42 @@ const LeaveRequests: React.FC = () => {
       setFormError('End date cannot be before start date.');
       return;
     }
-    // Optional: Prevent past dates
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    if (newRequest.startDate < today) {
-      setFormError('Start date cannot be in the past.');
-      return;
+    try {
+      await leavesAPI.create({
+        type: newRequest.type,
+        startDate: newRequest.startDate.toISOString(),
+        endDate: newRequest.endDate.toISOString(),
+        reason: newRequest.reason,
+      });
+      await refreshRequests();
+      setShowNewRequestDialog(false);
+      setNewRequest({ type: '', startDate: null, endDate: null, reason: '' });
+      setFormError(null);
+    } catch (e: any) {
+      setFormError(e.message || 'Failed to submit request');
     }
-    const days = Math.ceil((newRequest.endDate.getTime() - newRequest.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const request = {
-      id: requests.length + 1,
-      employee: {
-        name: 'Current User',
-        avatar: 'CU',
-        department: 'Engineering',
-        position: 'Software Engineer',
-      },
-      type: newRequest.type,
-      startDate: newRequest.startDate,
-      endDate: newRequest.endDate,
-      days,
-      reason: newRequest.reason,
-      status: 'pending',
-      submittedDate: new Date(),
-      approvedBy: null,
-      approvedDate: null,
-    };
-    setRequests([request, ...requests]);
-    setShowNewRequestDialog(false);
-    setNewRequest({ type: '', startDate: null, endDate: null, reason: '' });
-    setFormError(null);
   };
 
   // Note: Pagination/sort handlers removed until pagination UI is added
 
   // Handle approve action
-  const handleApprove = (requestId: number): void => {
-    setRequests(prev =>
-      prev.map(req =>
-        req.id === requestId
-          ? { ...req, status: 'approved', approvedBy: 'Current User', approvedDate: new Date() }
-          : req
-      )
-    );
+  const handleApprove = async (requestId: string | number): Promise<void> => {
+    try {
+      await leavesAPI.approve(String(requestId));
+      await refreshRequests();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Handle reject action
-  const handleReject = (requestId: number): void => {
-    setRequests(prev =>
-      prev.map(req =>
-        req.id === requestId
-          ? { ...req, status: 'rejected', approvedBy: 'Current User', approvedDate: new Date() }
-          : req
-      )
-    );
+  const handleReject = async (requestId: string | number): Promise<void> => {
+    try {
+      await leavesAPI.reject(String(requestId));
+      await refreshRequests();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -245,11 +225,23 @@ const LeaveRequests: React.FC = () => {
     return leaveType ? leaveType.color : ModernCorporateColors.info;
   };
 
-  const filteredRequests = requests.filter(request => {
-    if (filterStatus !== 'all' && request.status !== filterStatus) return false;
-    if (filterType !== 'all' && request.type !== filterType) return false;
-    return true;
-  });
+  useEffect(() => {
+    // reload when filters change
+    const run = async () => {
+      try {
+        setLoading(true);
+        await refreshRequests();
+      } catch (e) {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (currentUser) run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus, filterType]);
+
+  const filteredRequests = requests; // server filters by status; type filter to be supported later
 
   const pendingCount = requests.filter(r => r.status === 'pending').length;
   const approvedCount = requests.filter(r => r.status === 'approved').length;

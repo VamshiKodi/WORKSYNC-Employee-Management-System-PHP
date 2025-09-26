@@ -9,7 +9,10 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Access denied. No token provided.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    // Verify token with explicit algorithm; optionally wire issuer/audience via env
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', {
+      algorithms: ['HS256']
+    });
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
@@ -42,4 +45,19 @@ const adminAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { auth, adminAuth };
+// Role-based authorization: allow any of the given roles
+const roleAuth = (roles = []) => async (req, res, next) => {
+  try {
+    await auth(req, res, () => {
+      if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Access denied. Insufficient role.' });
+      }
+      next();
+    });
+  } catch (error) {
+    console.error('Role auth middleware error:', error);
+    res.status(403).json({ message: 'Access denied.' });
+  }
+};
+
+module.exports = { auth, adminAuth, roleAuth };

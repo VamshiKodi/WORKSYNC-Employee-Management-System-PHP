@@ -38,6 +38,20 @@ import Group from '@mui/icons-material/Group';
 import Business from '@mui/icons-material/Business';
 import WorkOutline from '@mui/icons-material/WorkOutline';
 import { employeesAPI } from '../services/api';
+import { departmentsAPI } from '../services/api';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -102,6 +116,11 @@ const AdminDashboard: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+
+  // Departments overview state
+  const [deptOverview, setDeptOverview] = useState<{ departments: any[]; attendanceSummary: any[] } | null>(null);
+  const [deptLoading, setDeptLoading] = useState<boolean>(false);
+  const [deptError, setDeptError] = useState<string | null>(null);
 
   // Form errors
   const [formErrors, setFormErrors] = useState<{ [k: string]: string }>({});
@@ -237,6 +256,24 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    const loadDept = async () => {
+      try {
+        setDeptLoading(true);
+        const data = await departmentsAPI.getOverview();
+        setDeptOverview({
+          departments: data.departments || [],
+          attendanceSummary: data.attendanceSummary || [],
+        });
+      } catch (err: any) {
+        setDeptError(err.message || 'Failed to load department overview');
+      } finally {
+        setDeptLoading(false);
+      }
+    };
+    loadDept();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -454,6 +491,42 @@ const AdminDashboard: React.FC = () => {
                 <Typography variant="h5" sx={{ fontWeight: 800, color: '#1e293b' }}>{Object.values(positionOptionsMap).flat().length}</Typography>
               </Box>
             </CardContent>
+          </Card>
+        </Box>
+
+        {/* Department Overview Charts */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3, mb: 4 }}>
+          <Card elevation={0} sx={{ p: 3, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1e293b' }}>Headcount by Department</Typography>
+            <Box sx={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={(deptOverview?.departments || []).map(d => ({ department: d.department || 'N/A', count: d.count }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="department" tick={{ fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={60} />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Bar dataKey="count" name="Employees" fill="#6366f1" radius={[6,6,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Card>
+
+          <Card elevation={0} sx={{ p: 3, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: '#1e293b' }}>Attendance (30 days)</Typography>
+            <Box sx={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie dataKey="count" data={(deptOverview?.attendanceSummary || []).map(a => ({ status: a.status, count: a.count }))} outerRadius={100} label>
+                    {(deptOverview?.attendanceSummary || []).map((_, idx) => (
+                      <Cell key={`cell-${idx}`} fill={["#22c55e","#ef4444","#f59e0b","#06b6d4","#8b5cf6"][idx % 5]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
           </Card>
         </Box>
 

@@ -146,6 +146,88 @@ export const employeesAPI = {
   },
 };
 
+// Leaves API
+export const leavesAPI = {
+  // Employee: create a new leave request
+  create: async (payload: { type: string; startDate: string; endDate: string; reason?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/leaves`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+  },
+
+  // Employee: list my leaves
+  getMy: async (params?: { status?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) queryParams.append(key, String(value));
+      });
+    }
+    const response = await fetch(`${API_BASE_URL}/leaves/my?${queryParams}`, { headers: getHeaders() });
+    return handleResponse(response);
+  },
+
+  // Admin/HR: list leaves
+  list: async (params?: { status?: string; employeeId?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) queryParams.append(key, String(value));
+      });
+    }
+    const response = await fetch(`${API_BASE_URL}/leaves?${queryParams}`, { headers: getHeaders() });
+    return handleResponse(response);
+  },
+
+  getById: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/leaves/${id}`, { headers: getHeaders() });
+    return handleResponse(response);
+  },
+
+  update: async (id: string, payload: Partial<{ type: string; startDate: string; endDate: string; reason: string }>) => {
+    const response = await fetch(`${API_BASE_URL}/leaves/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+  },
+
+  remove: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/leaves/${id}`, { method: 'DELETE', headers: getHeaders() });
+    return handleResponse(response);
+  },
+
+  approve: async (id: string, comments?: string) => {
+    const response = await fetch(`${API_BASE_URL}/leaves/${id}/approve`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ comments }),
+    });
+    return handleResponse(response);
+  },
+
+  reject: async (id: string, comments?: string) => {
+    const response = await fetch(`${API_BASE_URL}/leaves/${id}/reject`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ comments }),
+    });
+    return handleResponse(response);
+  },
+};
+
+// Departments API
+export const departmentsAPI = {
+  getOverview: async () => {
+    const response = await fetch(`${API_BASE_URL}/departments/stats/overview`, { headers: getHeaders() });
+    return handleResponse(response);
+  },
+};
+
 // Attendance API
 export const attendanceAPI = {
   // Clock in
