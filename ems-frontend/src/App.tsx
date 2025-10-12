@@ -16,6 +16,7 @@ import ModernCorporateDemo from './components/ModernCorporateDemo';
 import { AuthProvider } from './contexts/AuthContext';
 // New feature imports
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Analytics from './components/Analytics';
 import ActivityFeed from './components/ActivityFeed';
 import Profile from './components/Profile';
@@ -25,6 +26,9 @@ import BulkCSV from './components/BulkCSV';
 import Notifications from './components/Notifications';
 import Settings from './components/Settings';
 import TestingAccessibility from './components/TestingAccessibility';
+import EmployeeList from './components/EmployeeList';
+import Tasks from './components/Tasks';
+import Attendance from './components/Attendance';
 
 const theme = createTheme({
   palette: {
@@ -327,26 +331,32 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <div style={{ display: 'flex' }}>
-            <Sidebar />
-            <div style={{ flex: 1 }}>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/employee" element={<EmployeeDashboard />} />
-              <Route path="/demo" element={<ModernCorporateDemo />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/activity" element={<ActivityFeed />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/leave-requests" element={<LeaveRequests />} />
-                <Route path="/role-management" element={<RoleManagement />} />
-                <Route path="/bulk-csv" element={<BulkCSV />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/testing" element={<TestingAccessibility />} />
-              <Route path="/" element={<Navigate to="/login" replace />} />
-            </Routes>
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Header />
+            <div style={{ display: 'flex', flex: 1 }}>
+              <Sidebar />
+              <div style={{ flex: 1, overflow: 'auto' }}>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/employees" element={<EmployeeList />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/attendance" element={<Attendance />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/employee" element={<EmployeeDashboard />} />
+                  <Route path="/demo" element={<ModernCorporateDemo />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/activity" element={<ActivityFeed />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/leave-requests" element={<LeaveRequests />} />
+                  <Route path="/role-management" element={<RoleManagement />} />
+                  <Route path="/bulk-csv" element={<BulkCSV />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/testing" element={<TestingAccessibility />} />
+                  <Route path="/" element={<Navigate to="/login" replace />} />
+                </Routes>
+              </div>
             </div>
           </div>
         </Router>

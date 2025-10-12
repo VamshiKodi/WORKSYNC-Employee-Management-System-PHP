@@ -59,17 +59,75 @@ interface Notification {
 
 const Notifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: 'System Maintenance Scheduled',
-      message: 'Scheduled maintenance on Sunday, Jan 28th from 2:00 AM - 4:00 AM EST. System will be temporarily unavailable.',
-      type: 'warning',
-      timestamp: '2024-01-22 09:30:00',
-      read: false,
-      category: 'system',
-      sender: 'System Admin'
-    },
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch notifications from API
+  React.useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mark all as read when component mounts
+  React.useEffect(() => {
+    const markAllAsRead = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch('/api/notifications/mark-all-read', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Trigger notification update event
+        window.dispatchEvent(new Event('notificationUpdated'));
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    };
+
+    if (notifications.length > 0) {
+      markAllAsRead();
+    }
+  }, [notifications.length]);
+  
+  // Load notifications from localStorage or use default (fallback)
+  const loadNotifications = (): Notification[] => {
+    // Default notifications
+    return [
+      {
+        id: 1,
+        title: 'System Maintenance Scheduled',
+        message: 'Scheduled maintenance on Sunday, Jan 28th from 2:00 AM - 4:00 AM EST. System will be temporarily unavailable.',
+        type: 'warning',
+        timestamp: '2024-01-22 09:30:00',
+        read: false,
+        category: 'system',
+        sender: 'System Admin'
+      },
     {
       id: 2,
       title: 'New Employee Onboarding',
@@ -109,8 +167,9 @@ const Notifications: React.FC = () => {
       read: false,
       category: 'system',
       sender: 'System Admin'
-    },
-  ]);
+    }
+    ];
+  };
   
   const [settings, setSettings] = useState({
     emailNotifications: true,

@@ -5,7 +5,7 @@ interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'employee';
+  role: 'admin' | 'hr' | 'employee';
   employeeId?: string;
   employeeData?: {
     id: string;
@@ -54,8 +54,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        // Clear invalid token
-        authAPI.logout();
+        // Clear invalid token from localStorage
+        localStorage.removeItem('token');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -69,8 +70,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authAPI.login(username, password);
       setUser(response.user);
       return { user: response.user, role: response.user.role };
-    } catch (error) {
-      throw new Error('Invalid username or password');
+    } catch (error: any) {
+      // Pass through the actual error message from the API
+      throw new Error(error.message || 'Invalid username or password');
     }
   };
 

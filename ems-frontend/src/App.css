@@ -12,8 +12,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-  color: #f8fafc;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #cbd5e1 100%);
+  color: #1e293b;
   overflow-x: hidden;
 }
 
@@ -691,10 +691,10 @@ body {
   height: 100%;
   z-index: -2;
   background: 
-    radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 55%),
-    linear-gradient(135deg, #0f172a 0%, #111827 50%, #1f2937 100%);
+    linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #cbd5e1 100%);
   animation: bgPulse 8s ease-in-out infinite;
 }
 
@@ -815,10 +815,10 @@ html {
   height: 100%;
   z-index: -3;
   background:
-    radial-gradient(circle at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 30%, rgba(139,92,246,0.12) 0%, transparent 50%),
-    radial-gradient(circle at 40% 70%, rgba(236,72,153,0.10) 0%, transparent 55%),
-    linear-gradient(135deg, #0f172a 0%, #111827 50%, #1f2937 100%);
+    radial-gradient(circle at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 30%, rgba(139,92,246,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 70%, rgba(236,72,153,0.05) 0%, transparent 55%),
+    linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #cbd5e1 100%);
   animation: bgDrift 30s ease-in-out infinite alternate;
 }
 

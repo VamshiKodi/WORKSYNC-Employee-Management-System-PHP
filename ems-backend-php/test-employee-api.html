@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMS API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .response {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .success {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+        
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .token-display {
+            background: #fff9e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-logged-in {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status-logged-out {
+            background: #f44336;
+            color: white;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 EMS API Tester</h1>
+        <p class="subtitle">Test Employee Management System API endpoints</p>
+        
+        <!-- Login Section -->
+        <div class="section">
+            <h2>1. Admin Login 
+                <span id="loginStatus" class="status-badge status-logged-out">Not Logged In</span>
+            </h2>
+            <button onclick="login()">Login as Admin</button>
+            <button onclick="loginAsHR()">Login as HR</button>
+            <div id="loginResponse"></div>
+            <div id="tokenDisplay"></div>
+        </div>
+        
+        <!-- Add Employee Section -->
+        <div class="section">
+            <h2>2. Add New Employee</h2>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="firstName" value="John" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="lastName" value="Doe" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="email" value="john.doe@company.com" required>
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Department *</label>
+                    <select id="department">
+                        <option value="Engineering">Engineering</option>
+                        <option value="HR">HR</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Position *</label>
+                    <input type="text" id="position" value="Software Developer" required>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="phone" value="+1-555-0123">
+                </div>
+                
+                <div class="form-group">
+                    <label>Salary</label>
+                    <input type="number" id="salary" value="75000">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Hire Date</label>
+                <input type="date" id="hireDate" value="2025-10-01">
+            </div>
+            
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="address" value="123 Main St, City, State">
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Username * (for login)</label>
+                    <input type="text" id="username" value="john.doe" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Password * (min 6 characters)</label>
+                    <input type="password" id="password" value="password123" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Role</label>
+                <select id="role">
+                    <option value="employee">Employee</option>
+                    <option value="hr">HR</option>
+                </select>
+            </div>
+            
+            <button onclick="addEmployee()" id="addEmployeeBtn" disabled>Add Employee</button>
+            <button onclick="generateRandomEmployee()">Generate Random Data</button>
+            <div id="addEmployeeResponse"></div>
+        </div>
+        
+        <!-- Get Employees Section -->
+        <div class="section">
+            <h2>3. View All Employees</h2>
+            <button onclick="getEmployees()" id="getEmployeesBtn" disabled>Get All Employees</button>
+            <div id="getEmployeesResponse"></div>
+        </div>
+        
+        <!-- Test Employee Login -->
+        <div class="section">
+            <h2>4. Test Employee Login</h2>
+            <p class="subtitle">After adding an employee, test their login credentials here</p>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Username/Email</label>
+                    <input type="text" id="testUsername" placeholder="Enter username or email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="testPassword" placeholder="Enter password">
+                </div>
+            </div>
+            
+            <button onclick="testEmployeeLogin()">Test Employee Login</button>
+            <div id="testLoginResponse"></div>
+        </div>
+        
+        <!-- Health Check -->
+        <div class="section">
+            <h2>5. API Health Check</h2>
+            <button onclick="healthCheck()">Check API Health</button>
+            <div id="healthResponse"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost/EMS/ems-backend-php';
+        let authToken = null;
+        
+        function updateLoginStatus(loggedIn, username = '') {
+            const statusBadge = document.getElementById('loginStatus');
+            const addBtn = document.getElementById('addEmployeeBtn');
+            const getBtn = document.getElementById('getEmployeesBtn');
+            
+            if (loggedIn) {
+                statusBadge.textContent = `Logged in as ${username}`;
+                statusBadge.className = 'status-badge status-logged-in';
+                addBtn.disabled = false;
+                getBtn.disabled = false;
+            } else {
+                statusBadge.textContent = 'Not Logged In';
+                statusBadge.className = 'status-badge status-logged-out';
+                addBtn.disabled = true;
+                getBtn.disabled = true;
+            }
+        }
+        
+        async function login() {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                })
+            });
+            
+            const data = await response.json();
+            displayResponse('loginResponse', data, response.ok);
+            
+            if (response.ok && data.token) {
+                authToken = data.token;
+                updateLoginStatus(true, 'admin');
+                document.getElementById('tokenDisplay').innerHTML = 
+                    `<div class="token-display"><strong>Token:</strong> ${authToken.substring(0, 50)}...</div>`;
+            }
+        }
+        
+        async function loginAsHR() {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: 'hr',
+                    password: 'hr123'
+                })
+            });
+            
+            const data = await response.json();
+            displayResponse('loginResponse', data, response.ok);
+            
+            if (response.ok && data.token) {
+                authToken = data.token;
+                updateLoginStatus(true, 'hr');
+                document.getElementById('tokenDisplay').innerHTML = 
+                    `<div class="token-display"><strong>Token:</strong> ${authToken.substring(0, 50)}...</div>`;
+            }
+        }
+        
+        async function addEmployee() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+            
+            const employeeData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                department: document.getElementById('department').value,
+                position: document.getElementById('position').value,
+                phone: document.getElementById('phone').value,
+                salary: parseFloat(document.getElementById('salary').value) || 0,
+                hireDate: document.getElementById('hireDate').value,
+                address: document.getElementById('address').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+            
+            const response = await fetch(`${API_BASE}/api/employees`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(employeeData)
+            });
+            
+            const data = await response.json();
+            displayResponse('addEmployeeResponse', data, response.ok);
+            
+            if (response.ok) {
+                // Clear email, username for next entry
+                document.getElementById('email').value = '';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = 'password123';
+            }
+        }
+        
+        async function getEmployees() {
+            if (!authToken) {
+                alert('Please login first!');
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE}/api/employees`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            const data = await response.json();
+            displayResponse('getEmployeesResponse', data, response.ok);
+        }
+        
+        async function testEmployeeLogin() {
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+            
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            
+            const data = await response.json();
+            displayResponse('testLoginResponse', data, response.ok);
+            
+            if (response.ok) {
+                alert(`Login successful! Employee can now access the system.`);
+            }
+        }
+        
+        async function healthCheck() {
+            const response = await fetch(`${API_BASE}/api/health`);
+            const data = await response.json();
+            displayResponse('healthResponse', data, response.ok);
+        }
+        
+        function displayResponse(elementId, data, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="response ${isSuccess ? 'success' : 'error'}">${JSON.stringify(data, null, 2)}</div>`;
+        }
+        
+        function generateRandomEmployee() {
+            const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'Robert', 'Lisa'];
+            const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+            const departments = ['Engineering', 'HR', 'Marketing', 'Sales', 'Finance'];
+            const positions = {
+                'Engineering': ['Software Developer', 'Senior Engineer', 'Tech Lead', 'QA Engineer'],
+                'HR': ['HR Manager', 'Recruiter', 'HR Coordinator'],
+                'Marketing': ['Marketing Manager', 'Content Writer', 'Social Media Manager'],
+                'Sales': ['Sales Manager', 'Account Executive', 'Business Development'],
+                'Finance': ['Accountant', 'Financial Analyst', 'Controller']
+            };
+            
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const department = departments[Math.floor(Math.random() * departments.length)];
+            const position = positions[department][Math.floor(Math.random() * positions[department].length)];
+            const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
+            
+            document.getElementById('firstName').value = firstName;
+            document.getElementById('lastName').value = lastName;
+            document.getElementById('email').value = `${username}@company.com`;
+            document.getElementById('department').value = department;
+            document.getElementById('position').value = position;
+            document.getElementById('salary').value = Math.floor(Math.random() * 50000) + 50000;
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = 'password123';
+        }
+        
+        // Run health check on load
+        window.addEventListener('load', () => {
+            healthCheck();
+        });
+    </script>
+</body>
+</html>

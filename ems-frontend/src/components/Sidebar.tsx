@@ -23,6 +23,10 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PeopleIcon from '@mui/icons-material/People';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
   { 
@@ -30,63 +34,96 @@ const navItems = [
     icon: <DashboardIcon />, 
     to: '/dashboard', 
     badge: null,
-    description: 'Overview & Statistics'
+    description: 'Overview & Statistics',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
+  },
+  { 
+    label: 'Employee List', 
+    icon: <PeopleIcon />, 
+    to: '/employees', 
+    badge: null,
+    description: 'View & Manage Employees',
+    roles: ['admin', 'hr'] // Admin and HR only
+  },
+  { 
+    label: 'Tasks', 
+    icon: <AssignmentIcon />, 
+    to: '/tasks', 
+    badge: null,
+    description: 'Manage & Track Tasks',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
+  },
+  { 
+    label: 'Attendance', 
+    icon: <AccessTimeIcon />, 
+    to: '/attendance', 
+    badge: null,
+    description: 'Clock In/Out & Track Attendance',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
   },
   { 
     label: 'Analytics', 
     icon: <BarChartIcon />, 
     to: '/analytics', 
-    badge: 'New',
-    description: 'Data Insights & Reports'
+    badge: null,
+    description: 'Data Insights',
+    roles: ['admin', 'hr', 'employee']
   },
   { 
     label: 'Activity Feed', 
     icon: <TimelineIcon />, 
     to: '/activity', 
     badge: null,
-    description: 'Recent Activities'
+    description: 'Recent Activities',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
   },
   { 
     label: 'Profile', 
     icon: <PersonIcon />, 
     to: '/profile', 
     badge: null,
-    description: 'User Profile & Settings'
+    description: 'User Profile & Settings',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
   },
   { 
     label: 'Leave Requests', 
     icon: <EventNoteIcon />, 
     to: '/leave-requests', 
     badge: '3',
-    description: 'Manage Leave Applications'
+    description: 'Manage Leave Applications',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
   },
   { 
     label: 'Role Management', 
     icon: <SecurityIcon />, 
     to: '/role-management', 
     badge: null,
-    description: 'User Roles & Permissions'
+    description: 'User Roles & Permissions',
+    roles: ['admin'] // Admin only
   },
   { 
     label: 'Bulk Import/Export', 
     icon: <UploadFileIcon />, 
     to: '/bulk-csv', 
     badge: null,
-    description: 'Data Import & Export'
+    description: 'Data Import & Export',
+    roles: ['admin', 'hr'] // Admin and HR only
   },
   { 
     label: 'Notifications', 
     icon: <NotificationsIcon />, 
     to: '/notifications', 
     badge: '5',
-    description: 'System Notifications'
+    description: 'System Notifications',
+    roles: ['admin', 'hr', 'employee'] // All roles can access
   },
   { 
     label: 'Settings', 
     icon: <SettingsIcon />, 
     to: '/settings', 
     badge: null,
-    description: 'System Configuration'
+    description: 'System Configuration',
+    roles: ['admin'] // Admin only
   },
 ];
 
@@ -94,6 +131,158 @@ const drawerWidth = 320;
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const [pendingLeaveCount, setPendingLeaveCount] = React.useState(0);
+  const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
+  const [taskCount, setTaskCount] = React.useState(0);
+  
+  // Fetch task counts
+  React.useEffect(() => {
+    const fetchTaskCount = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/tasks', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const tasks = data.data || [];
+          
+          // For employees: count pending tasks (not completed)
+          // For admin/hr: count completed tasks needing review
+          if (user?.role === 'employee') {
+            const pendingTasks = tasks.filter((t: any) => t.status !== 'completed').length;
+            setTaskCount(pendingTasks);
+          } else if (user?.role === 'admin' || user?.role === 'hr') {
+            const completedTasks = tasks.filter((t: any) => t.status === 'completed' && !t.reviewed).length;
+            setTaskCount(completedTasks);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    
+    if (isAuthenticated) {
+      fetchTaskCount();
+    }
+    
+    // Listen for task updates
+    const handleTaskUpdate = () => {
+      fetchTaskCount();
+    };
+    window.addEventListener('taskUpdated', handleTaskUpdate);
+    
+    return () => {
+      window.removeEventListener('taskUpdated', handleTaskUpdate);
+    };
+  }, [isAuthenticated, user?.role]);
+  
+  // Fetch unread notifications count
+  React.useEffect(() => {
+    const fetchUnreadCount = async () => {
+      // Only fetch if user is authenticated
+      if (!isAuthenticated || !user) {
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('/api/notifications', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const unreadCount = data.data?.filter((n: any) => !n.read).length || 0;
+          setUnreadNotificationCount(unreadCount);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+    
+    fetchUnreadCount();
+    
+    // Listen for notification updates
+    const handleNotificationUpdate = () => {
+      fetchUnreadCount();
+    };
+    window.addEventListener('notificationUpdated', handleNotificationUpdate);
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notificationUpdated', handleNotificationUpdate);
+    };
+  }, [isAuthenticated, user]);
+  
+  // Fetch pending leave requests count for admin/hr
+  React.useEffect(() => {
+    const fetchPendingCount = async () => {
+      // Only fetch if user is authenticated and has admin/hr role
+      if (!isAuthenticated || !user || (user.role !== 'admin' && user.role !== 'hr')) {
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('/api/leave-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const pending = data.data?.filter((req: any) => req.status === 'pending').length || 0;
+          setPendingLeaveCount(pending);
+        }
+      } catch (error) {
+        console.error('Error fetching pending leave requests:', error);
+      }
+    };
+    
+    fetchPendingCount();
+    
+    // Listen for leave request updates
+    const handleLeaveUpdate = () => {
+      fetchPendingCount();
+    };
+    window.addEventListener('leaveRequestUpdated', handleLeaveUpdate);
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('leaveRequestUpdated', handleLeaveUpdate);
+    };
+  }, [isAuthenticated, user?.role]);
+  
+  // Don't show sidebar if user is not authenticated or on login page
+  if (!isAuthenticated || !user || location.pathname === '/login') {
+    return null;
+  }
+  
+  // Filter navigation items based on user role
+  const allowedNavItems = navItems.filter(item => 
+    item.roles.includes(user?.role || 'employee')
+  );
   
   return (
     <Drawer
@@ -209,7 +398,7 @@ const Sidebar: React.FC = () => {
       {/* Enhanced Navigation Items */}
       <Box sx={{ flex: 1, overflow: 'auto', py: 3 }}>
         <List sx={{ px: 2 }}>
-          {navItems.map((item, index) => {
+          {allowedNavItems.map((item, index) => {
             const isActive = location.pathname === item.to;
             return (
               <ListItem 
@@ -319,9 +508,17 @@ const Sidebar: React.FC = () => {
                         lineHeight: 1.2,
                       }}
                     />
-                    {item.badge && (
+                    {(item.badge || 
+                      (item.label === 'Leave Requests' && pendingLeaveCount > 0) || 
+                      (item.label === 'Notifications' && unreadNotificationCount > 0) ||
+                      (item.label === 'Tasks' && taskCount > 0)) && (
                       <Badge
-                        badgeContent={item.badge}
+                        badgeContent={
+                          item.label === 'Leave Requests' ? pendingLeaveCount :
+                          item.label === 'Notifications' ? unreadNotificationCount :
+                          item.label === 'Tasks' ? taskCount :
+                          item.badge
+                        }
                         sx={{
                           '& .MuiBadge-badge': {
                             background: item.badge === 'New' 
@@ -381,7 +578,7 @@ const Sidebar: React.FC = () => {
                 border: '2px solid rgba(255,255,255,0.2)',
               }}
             >
-              JD
+              {user?.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
             </Avatar>
             <Box
               sx={{
@@ -410,10 +607,17 @@ const Sidebar: React.FC = () => {
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography variant="body1" sx={{ fontWeight: 700, color: '#fff', mb: 0.5 }}>
-              John Doe
+              {user?.username || 'User'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block', mb: 0.5 }}>
-              Senior Administrator
+              {(() => {
+                switch (user?.role) {
+                  case 'admin': return 'Administrator';
+                  case 'hr': return 'HR Manager';
+                  case 'employee': return 'Employee';
+                  default: return 'User';
+                }
+              })()}
             </Typography>
           </Box>
         </Box>

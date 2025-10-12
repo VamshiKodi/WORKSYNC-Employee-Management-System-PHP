@@ -62,5 +62,5 @@
     "@types/three": "^0.178.0",
     "jest-axe": "^10.0.0"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://localhost/EMS/ems-backend-php"
 }
